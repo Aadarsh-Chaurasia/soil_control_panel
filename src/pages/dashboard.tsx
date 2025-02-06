@@ -38,7 +38,7 @@ export default function Dashboard() {
   }
 
   // Extract timestamps and data points
-  const labels = data.map((item) => item.timestamp)
+  const labels = data.map((item) => item.formattedTimestamp)
   const datasets = {
     humidity: data.map((item) => item.humidity),
     temperature: data.map((item) => item.temperature),
@@ -128,6 +128,7 @@ export default function Dashboard() {
                     borderColor: "#818cf8",
                     backgroundColor: "#818cf8",
                     tension: 0.4,
+                    pointRadius: 0
                   },
                 ],
               }}
@@ -152,6 +153,7 @@ export default function Dashboard() {
                     borderColor: "#4ade80",
                     backgroundColor: "#4ade80",
                     tension: 0.4,
+                    pointRadius: 0
                   },
                 ],
               }}
@@ -176,6 +178,7 @@ export default function Dashboard() {
                     borderColor: "#fbbf24",
                     backgroundColor: "#fbbf24",
                     tension: 0.4,
+                    pointRadius: 0
                   },
                 ],
               }}
