@@ -19,6 +19,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 export default function Report() {
   const [data, setData] = useState<any[]>([])
+  const [filteredData, setFilteredData] = useState<any[]>([])
   const [timeRange, setTimeRange] = useState("24h")
 
   useEffect(() => {
@@ -29,38 +30,80 @@ export default function Report() {
     fetchData()
   }, [])
 
-  // Get current values
-  const currentValues = {
-    humidity: data[data.length - 1]?.humidity || 0,
-    temperature: data[data.length - 1]?.temperature || 0,
-    moisture: data[data.length - 1]?.moisture || 0,
+  useEffect(() => {
+    if (data.length === 0) return
+
+    const latestTimestamp = new Date(data[data.length - 1].timestamp)
+
+    let filtered: any[] = []
+    switch (timeRange) {
+      case "24h":
+        filtered = filterDataForRange(latestTimestamp, 1) // Filter data for the past 24 hours
+        break
+      case "7d":
+        filtered = filterDataForRange(latestTimestamp, 7) // Filter data for the past 7 days
+        break
+      case "30d":
+        filtered = filterDataForRange(latestTimestamp, 30) // Filter data for the past 30 days
+        break
+      default:
+        filtered = data
+    }
+
+    setFilteredData(filtered)
+  }, [data, timeRange])
+
+  const filterDataForRange = (currentTime: Date, days: number) => {
+    return data.filter((item) => {
+      const itemTime = new Date(item.timestamp)
+      return itemTime >= new Date(currentTime.getTime() - days * 24 * 60 * 60 * 1000)
+    })
   }
 
-  // Extract data for combined chart
-  const labels = data.map((item) => item.timestamp)
+  // Get current values
+  const currentValues = {
+    humidity: filteredData[filteredData.length - 1]?.humidity || 0,
+    temperature: filteredData[filteredData.length - 1]?.temperature || 0,
+    moisture: filteredData[filteredData.length - 1]?.moisture || 0,
+  }
+
+  // Format the labels for the chart based on the selected time range
+  const labels = filteredData.map((item) => {
+    const date = new Date(item.timestamp)
+    if (timeRange === "24h") {
+      return `${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`
+    } else if (timeRange === "7d" || timeRange === "30d") {
+      return `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })}`
+    }
+    return item.timestamp
+  })
+
   const chartData = {
     labels,
     datasets: [
       {
         label: "Humidity",
-        data: data.map((item) => item.humidity),
+        data: filteredData.map((item) => item.humidity),
         borderColor: "#818cf8",
         yAxisID: "y",
         tension: 0.4,
+        pointRadius: 0, // No points
       },
       {
         label: "Temperature",
-        data: data.map((item) => item.temperature),
+        data: filteredData.map((item) => item.temperature),
         borderColor: "#4ade80",
         yAxisID: "y1",
         tension: 0.4,
+        pointRadius: 0, // No points
       },
       {
         label: "Soil Moisture",
-        data: data.map((item) => item.moisture),
+        data: filteredData.map((item) => item.moisture),
         borderColor: "#fbbf24",
         yAxisID: "y",
         tension: 0.4,
+        pointRadius: 0, // No points
       },
     ],
   }
@@ -158,4 +201,3 @@ export default function Report() {
     </div>
   )
 }
-
